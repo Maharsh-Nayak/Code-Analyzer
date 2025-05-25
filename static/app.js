@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             showLoading();
-            const response = await fetch('/api/analyze', {
+            const response = await fetch('code_analysis/api/analyze', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -34,7 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.error || 'Failed to analyze code');
             }
 
-            outputDiv.textContent = data.response;
+            // For Model Response to Html
+            outputDiv.innerHTML = data.response;
+            
         } catch (error) {
             outputDiv.textContent = `Error: ${error.message}`;
         } finally {
