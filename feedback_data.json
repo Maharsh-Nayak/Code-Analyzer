@@ -369,5 +369,14 @@
         }
     ],
     "repo_analysis": [],
-    "diagram": []
+    "diagram": [
+        {
+            "timestamp": "2025-05-25T17:16:48.980492",
+            "rating": 4,
+            "feedback_text": "Good can improve further ",
+            "additional_data": {
+                "diagram_type": "uml"
+            }
+        }
+    ]
 }

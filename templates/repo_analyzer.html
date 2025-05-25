@@ -152,6 +152,29 @@
         .role-item-content {
             color: #6c757d;
         }
+        .feedback-form {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .rating-btn {
+            padding: 8px 16px;
+            margin: 0 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .rating-btn.active {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
     </style>
 </head>
 <body>
@@ -235,6 +258,26 @@
                 </div>
             </div>
         </div>
+
+        <!-- Feedback Form -->
+        <div id="feedback-form" class="feedback-form">
+            <h3 class="mb-4">How was this repository analysis?</h3>
+            <div class="mb-4">
+                <label class="d-block mb-2">Rating</label>
+                <div class="d-flex gap-2">
+                    <button class="rating-btn" data-rating="1">1</button>
+                    <button class="rating-btn" data-rating="2">2</button>
+                    <button class="rating-btn" data-rating="3">3</button>
+                    <button class="rating-btn" data-rating="4">4</button>
+                    <button class="rating-btn" data-rating="5">5</button>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="feedback-text" class="form-label">Feedback (optional)</label>
+                <textarea id="feedback-text" class="form-control" rows="3" placeholder="Share your thoughts about the repository analysis..."></textarea>
+            </div>
+            <button id="submit-feedback" class="btn btn-primary">Submit Feedback</button>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -295,8 +338,67 @@
             }
         });
 
+        let selectedRating = null;
+
+        // Add event listeners for rating buttons
+        document.querySelectorAll('.rating-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                selectedRating = button.dataset.rating;
+                document.querySelectorAll('.rating-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+            });
+        });
+
+        // Add event listener for feedback submission
+        document.getElementById('submit-feedback').addEventListener('click', async () => {
+            if (!selectedRating) {
+                alert('Please select a rating');
+                return;
+            }
+
+            const feedbackText = document.getElementById('feedback-text').value;
+            const repoUrl = document.getElementById('repoUrl').value;
+
+            try {
+                const response = await fetch('/repo-analyzer/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        rating: selectedRating,
+                        feedback_text: feedbackText,
+                        additional_data: {
+                            repository_url: repoUrl
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Thank you for your feedback!');
+                    document.getElementById('feedback-form').style.display = 'none';
+                    resetFeedbackForm();
+                } else {
+                    throw new Error(data.error || 'Failed to submit feedback');
+                }
+            } catch (error) {
+                alert('Error submitting feedback: ' + error.message);
+            }
+        });
+
+        function resetFeedbackForm() {
+            selectedRating = null;
+            document.getElementById('feedback-text').value = '';
+            document.querySelectorAll('.rating-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+
         function displayResults(data) {
-            console.log('Displaying results:', data); // Debug log
+            console.log('Displaying results:', data);
             
             // Display overview
             const overviewContent = document.getElementById('overviewContent');
@@ -438,6 +540,9 @@
                     `;
                 }
             }
+
+            // Show feedback form after displaying results
+            document.getElementById('feedback-form').style.display = 'block';
 
             // Show results
             document.getElementById('results').style.display = 'block';

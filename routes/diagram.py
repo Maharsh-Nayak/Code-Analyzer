@@ -5,9 +5,13 @@ import os
 import graphviz
 from sqlalchemy import create_engine, text, inspect
 import base64
+from utils.feedback_learner import FeedbackLearner
 
 # Create blueprint
 diagram = Blueprint('diagram', __name__)
+
+# Initialize feedback learner
+feedback_learner = FeedbackLearner()
 
 @diagram.route('/')
 def diagram_page():
@@ -170,3 +174,27 @@ def generate_diagram():
                 os.unlink(f'{output_path}.png')
         except Exception as cleanup_err:
             print(f'Cleanup error: {cleanup_err}')
+
+@diagram.route('/api/feedback', methods=['POST'])
+def submit_feedback():
+    data = request.json
+    rating = data.get('rating')
+    feedback_text = data.get('feedback_text')
+    additional_data = data.get('additional_data', {})
+
+    if not all([rating, feedback_text]):
+        return jsonify({"error": "Missing required feedback fields"}), 400
+    try:
+        rating = int(rating)
+        if not 1 <= rating <= 5:
+            raise ValueError
+    except ValueError:
+        return jsonify({"error": "Rating must be an integer between 1 and 5"}), 400
+
+    feedback_learner.save_feedback(
+        feedback_type='diagram',
+        rating=rating,
+        feedback_text=feedback_text,
+        additional_data=additional_data
+    )
+    return jsonify({"message": "Feedback saved successfully"})
