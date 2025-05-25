@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             showLoading();
-            const response = await fetch('/api/analyze', {
+            const response = await fetch('code-analyzer/api/analyze', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

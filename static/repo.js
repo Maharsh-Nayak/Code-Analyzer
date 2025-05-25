@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const structureDiv = document.getElementById('structure');
     const languagesDiv = document.getElementById('languages');
     const loadingOverlay = document.getElementById('loading');
+    const aiSummaryDiv = document.getElementById('ai-summary');
 
     function extractRepoInfo(url) {
         try {
@@ -26,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function analyzeRepository() {
+        console.log("analyzing repository");
         const url = repoUrlInput.value.trim();
         if (!url) {
             alert('Please enter a GitHub repository URL');
@@ -35,8 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             showLoading();
             const repoInfo = extractRepoInfo(url);
-            
-            const response = await fetch('/api/analyze-repo', {
+            console.log("sending request to server");
+            console.log(repoInfo);
+
+            const response = await fetch('/repo_analyzer/api/analyze-repo', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -59,9 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 .join('\n');
             languagesDiv.textContent = languageContent;
 
+            // Display AI summary
+            aiSummaryDiv.textContent = data.ai_summary;
+
         } catch (error) {
             structureDiv.textContent = `Error: ${error.message}`;
             languagesDiv.textContent = '';
+            aiSummaryDiv.textContent = '';
         } finally {
             hideLoading();
         }
@@ -71,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         repoUrlInput.value = '';
         structureDiv.textContent = '';
         languagesDiv.textContent = '';
+        aiSummaryDiv.textContent = '';
     }
 
     function showLoading() {

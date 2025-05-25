@@ -66,7 +66,7 @@ def call_gemini_api(role, user_input):
 def index():
     return send_from_directory('static', 'index.html')
 
-@code_analysis.route('/api/analyze', methods=['POST'])
+@code_analysis.route('code-analyzer/api/analyze', methods=['POST'])
 def analyze():
     data = request.json
     role = data.get('role')
