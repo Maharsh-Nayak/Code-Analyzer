@@ -342,6 +342,30 @@
                 "input_length": 4477,
                 "role": "backend"
             }
+        },
+        {
+            "timestamp": "2025-05-25T12:36:29.464315",
+            "rating": 5,
+            "feedback_text": "asd",
+            "additional_data": {
+                "role": "frontend"
+            }
+        },
+        {
+            "timestamp": "2025-05-25T13:52:45.011672",
+            "rating": 5,
+            "feedback_text": ".",
+            "additional_data": {
+                "role": "frontend"
+            }
+        },
+        {
+            "timestamp": "2025-05-25T14:05:37.944863",
+            "rating": 5,
+            "feedback_text": ".",
+            "additional_data": {
+                "role": "frontend"
+            }
         }
     ],
     "repo_analysis": [],

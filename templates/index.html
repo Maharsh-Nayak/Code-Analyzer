@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gemini Code Analyzer</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
+  />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <header class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-gray-800 mb-2">
+        Gemini Code Analyzer
+      </h1>
+      <p class="text-gray-600">Get expert analysis of your code</p>
+    </header>
+
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <!-- Role selector -->
+      <div class="mb-6">
+        <label for="role" class="block text-sm font-medium text-gray-700 mb-2"
+          >Select Role</label
+        >
+        <select
+          id="role"
+          class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="frontend">Frontend Developer</option>
+          <option value="backend">Backend Developer</option>
+          <option value="non-technical">Non-Technical</option>
+        </select>
+      </div>
+
+      <!-- Analysis type selector -->
+      <div class="mb-6">
+        <label
+          for="analysis-type"
+          class="block text-sm font-medium text-gray-700 mb-2"
+          >Select Analysis Type</label
+        >
+        <select
+          id="analysis-type"
+          class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="standard">Standard Analysis</option>
+          <option value="rag">RAG-Enhanced Analysis</option>
+        </select>
+      </div>
+
+      <!-- Code input -->
+      <div class="mb-6">
+        <label
+          for="input"
+          class="block text-sm font-medium text-gray-700 mb-2"
+          >Enter your code or question</label
+        >
+        <textarea
+          id="input"
+          rows="6"
+          class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        ></textarea>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex space-x-4 mb-6">
+        <button
+          id="submit"
+          class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Analyze
+        </button>
+        <button
+          id="clear"
+          class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        >
+          Clear
+        </button>
+      </div>
+
+      <!-- Output -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Analysis Result
+        </label>
+        <div
+          id="output"
+          class="w-full p-4 bg-gray-50 border border-gray-300 rounded-md min-h-[200px] whitespace-pre-wrap break-words overflow-x-auto overflow-y-auto max-h-[400px]"
+        ></div>
+      </div>
+
+      <!-- Feedback form -->
+      <div id="feedback-form" class="mt-6 hidden">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">
+          How was this analysis?
+        </h3>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Rating
+          </label>
+          <div class="flex space-x-2">
+            <button
+              class="rating-btn px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
+              data-rating="1"
+            >
+              1
+            </button>
+            <button
+              class="rating-btn px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
+              data-rating="2"
+            >
+              2
+            </button>
+            <button
+              class="rating-btn px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
+              data-rating="3"
+            >
+              3
+            </button>
+            <button
+              class="rating-btn px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
+              data-rating="4"
+            >
+              4
+            </button>
+            <button
+              class="rating-btn px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
+              data-rating="5"
+            >
+              5
+            </button>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label
+            for="feedback-text"
+            class="block text-sm font-medium text-gray-700 mb-2"
+            >Feedback (optional)</label
+          >
+          <textarea
+            id="feedback-text"
+            rows="3"
+            class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Share your thoughts about the analysis..."
+          ></textarea>
+        </div>
+        <button
+          id="submit-feedback"
+          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Submit Feedback
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-6 text-center">
+      <a href="/repo-analyzer" class="text-blue-600 hover:text-blue-800"
+        >→ Go to Repository Analyzer</a
+      >
+    </div>
+
+    <!-- Loading overlay -->
+    <div
+      id="loading"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+    >
+      <div class="bg-white p-4 rounded-lg shadow-lg">
+        <div
+          class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
+        ></div>
+        <p class="mt-2 text-gray-600">Analyzing...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../static/app.js"></script>
+</body>
+</html>

@@ -15,168 +15,158 @@ def diagram_page():
 
 @diagram.route('/generate_diagram', methods=['POST'])
 def generate_diagram():
-    print("Received diagram generation request")  # Log request
+    print("Received diagram generation request")
     code = request.json.get('code', '')
     diagram_type = request.json.get('type', 'uml')  # 'uml' or 'erd'
-    skip_feedback = request.json.get('skip_feedback', False)
-    
-    print(f"Diagram type: {diagram_type}")  # Log diagram type
-    print(f"Code length: {len(code)} characters")  # Log code length
-    
+
+    print(f"Diagram type: {diagram_type}")
+    print(f"Code length: {len(code)} characters")
+
     if not code:
         return jsonify({'error': 'No code provided'}), 400
-    
+
     temp_file = None
     output_dir = None
     db_path = None
     output_path = None
-    
+
     try:
         if diagram_type == 'uml':
-            print("Generating UML diagram")  # Log UML generation start
-            # Create a temporary Python file
-            with tempfile.NamedTemporaryFile(suffix='.py', delete=False, mode='w', encoding='utf-8') as f:
-                f.write(code)
-                temp_file = f.name
-                print(f"Created temporary file: {temp_file}")  # Log temp file creation
-            
-            # Generate UML diagram using pyreverse
-            output_dir = tempfile.mkdtemp()
-            print(f"Created output directory: {output_dir}")
-            try:
-                print("Running Pyreverse")  # Log before running Pyreverse
-                # Run pyreverse using subprocess
-                result = subprocess.run(
-                    ['pyreverse', '-o', 'png', '-d', output_dir, '-p', 'classes', temp_file],
-                    capture_output=True,
-                    text=True
-                )
-                
-                if result.returncode != 0:
-                    print(f"Pyreverse error: {result.stderr}")
-                    raise Exception(f"Pyreverse failed: {result.stderr}")
-                
-                print("Pyreverse completed")  # Log after Pyreverse
-                
-                # Read the generated diagram
-                diagram_path = os.path.join(output_dir, 'classes_classes.png')  # Updated filename
-                print(f"Looking for diagram at: {diagram_path}")  # Log diagram path
-                if os.path.exists(diagram_path):
-                    print("Diagram file found")  # Log success
-                    with open(diagram_path, 'rb') as f:
-                        diagram_data = f.read()
-                    return jsonify({
-                        'success': True,
-                        'diagram': base64.b64encode(diagram_data).decode('utf-8'),
-                        'type': 'uml',
-                        'requires_feedback': not skip_feedback,
-                        'feedback_type': 'diagram',
-                        'feedback_context': {
-                            'diagram_type': 'uml',
-                            'code_length': len(code)
+            print("Generating UML diagram using PlantUML")
+
+            def generate_plantuml_from_python(code_str):
+                import ast
+                tree = ast.parse(code_str)
+                classes = {}
+
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.ClassDef):
+                        base_classes = [base.id for base in node.bases if isinstance(base, ast.Name)]
+                        methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
+                        classes[node.name] = {
+                            "bases": base_classes,
+                            "methods": methods
                         }
-                    })
-                else:
-                    # Check if any files were generated
-                    generated_files = os.listdir(output_dir)
-                    error_msg = f'Failed to generate UML diagram - no output file created. Generated files: {generated_files}'
-                    print(error_msg)  # Log the error
-                    return jsonify({'error': error_msg}), 500
-            except Exception as e:
-                error_msg = f'Failed to generate UML diagram: {str(e)}'
-                print(error_msg)  # Log the error
-                return jsonify({'error': error_msg}), 500
-                
-        elif diagram_type == 'erd':
-            # Create a temporary SQLite database
-            db_path = tempfile.mktemp(suffix='.db')
-            engine = create_engine(f'sqlite:///{db_path}')
-            
-            try:
-                # Execute the SQL to create tables
-                with engine.connect() as conn:
-                    conn.execute(text(code))
-                    conn.commit()
-                
-                # Create ERD using graphviz
-                dot = graphviz.Digraph(comment='Database Schema')
-                dot.attr(rankdir='LR')
-                
-                # Get table information
-                inspector = inspect(engine)
-                tables = inspector.get_table_names()
-                
-                if not tables:
-                    return jsonify({'error': 'No tables found in the provided SQL'}), 400
-                
-                for table_name in tables:
-                    # Create a subgraph for each table
-                    with dot.subgraph(name=f'cluster_{table_name}') as s:
-                        s.attr(label=table_name)
-                        # Get columns
-                        columns = inspector.get_columns(table_name)
-                        for column in columns:
-                            # Format column info
-                            col_info = f"{column['name']}\n{column['type']}"
-                            if column.get('primary_key'):
-                                col_info += " (PK)"
-                            if column.get('nullable') is False:
-                                col_info += " NOT NULL"
-                            s.node(f"{table_name}_{column['name']}", col_info)
-                    
-                    # Get foreign keys
-                    foreign_keys = inspector.get_foreign_keys(table_name)
-                    for fk in foreign_keys:
-                        # Add edge for foreign key relationship
-                        dot.edge(
-                            f"{table_name}_{fk['constrained_columns'][0]}",
-                            f"{fk['referred_table']}_{fk['referred_columns'][0]}",
-                            label="FK"
-                        )
-                
-                # Save the diagram
-                output_path = tempfile.mktemp(suffix='.png')
-                dot.render(output_path, format='png', cleanup=True)
-                
-                # Read the generated diagram
-                with open(f'{output_path}.png', 'rb') as f:
-                    diagram_data = f.read()
-                
+
+                lines = ["@startuml", "skinparam classAttributeIconSize 0"]
+                for cls, data in classes.items():
+                    lines.append(f"class {cls} {{")
+                    for method in data["methods"]:
+                        lines.append(f"  + {method}()")
+                    lines.append("}")
+                for cls, data in classes.items():
+                    for base in data["bases"]:
+                        lines.append(f"{base} <|-- {cls}")
+                lines.append("@enduml")
+                return "\n".join(lines)
+
+            plantuml_code = generate_plantuml_from_python(code)
+
+            with tempfile.NamedTemporaryFile(suffix='.puml', delete=False, mode='w', encoding='utf-8') as f:
+                f.write(plantuml_code)
+                temp_file = f.name
+
+            output_dir = tempfile.mkdtemp()
+
+            plantuml_jar_path = os.path.join(os.path.dirname(__file__), 'plantuml.jar')
+            result = subprocess.run(
+                ['java', '-jar', plantuml_jar_path, '-tpng', '-o', output_dir, temp_file],
+                capture_output=True, text=True
+            )
+
+            if result.returncode != 0:
+                raise Exception(f"PlantUML failed: {result.stderr}")
+
+            # Correctly find the generated PNG file (PlantUML names it after input file)
+            png_files = [f for f in os.listdir(output_dir) if f.endswith('.png')]
+
+            if png_files:
+                output_path = os.path.join(output_dir, png_files[0])  # get first png file
+                with open(output_path, 'rb') as f:
+                    data = f.read()
                 return jsonify({
                     'success': True,
-                    'diagram': base64.b64encode(diagram_data).decode('utf-8'),
-                    'type': 'erd',
-                    'requires_feedback': not skip_feedback,
-                    'feedback_type': 'diagram',
-                    'feedback_context': {
-                        'diagram_type': 'erd',
-                        'table_count': len(tables),
-                        'code_length': len(code)
-                    }
+                    'diagram': base64.b64encode(data).decode('utf-8'),
+                    'type': 'uml'
                 })
-            except Exception as e:
-                error_msg = f'Failed to generate ERD diagram: {str(e)}'
-                print(error_msg)  # Log the error
-                return jsonify({'error': error_msg}), 500
-            
+            else:
+                files = os.listdir(output_dir)
+                return jsonify({'error': f'No UML output. Files: {files}'}), 500
+
+        elif diagram_type == 'erd':
+            db_path = tempfile.mktemp(suffix='.db')
+            engine = create_engine(f'sqlite:///{db_path}')
+
+            raw_conn = engine.raw_connection()
+            try:
+                cursor = raw_conn.cursor()
+                cursor.executescript(code)
+                raw_conn.commit()
+            finally:
+                raw_conn.close()
+
+            dot = graphviz.Digraph(comment='Database Schema')
+            dot.attr(rankdir='LR')
+            dot.attr('node', shape='plaintext')
+
+            inspector = inspect(engine)
+            tables = inspector.get_table_names()
+            if not tables:
+                return jsonify({'error': 'No tables found in SQL'}), 400
+
+            for table in tables:
+                cols = inspector.get_columns(table)
+                label = f'''<
+<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+  <TR><TD BGCOLOR="lightblue" COLSPAN="2"><B>{table}</B></TD></TR>
+'''
+                for c in cols:
+                    name, typ = c['name'], str(c['type'])
+                    pk = c.get('primary_key', False)
+                    nn = not c.get('nullable', True)
+                    style = 'BGCOLOR="palegreen"' if pk else ('BGCOLOR="mistyrose"' if nn else '')
+                    pk_text = ' PK' if pk else ''
+                    nn_text = ' NOT NULL' if nn else ''
+                    label += f'<TR><TD ALIGN="LEFT" {style}>{name}{pk_text}</TD><TD ALIGN="LEFT">{typ}{nn_text}</TD></TR>\n'
+                label += '</TABLE>>'
+                dot.node(table, label=label, _attributes={'labeltype': 'html'})
+
+            for table in tables:
+                for fk in inspector.get_foreign_keys(table):
+                    src_cols = fk.get('constrained_columns') or []
+                    tgt_table = fk.get('referred_table')
+                    tgt_cols = fk.get('referred_columns') or []
+                    if not tgt_table:
+                        continue
+                    for src, tgt in zip(src_cols, tgt_cols):
+                        dot.edge(table, tgt_table, label=f'FK: {src}→{tgt}', color='blue')
+
+            output_path = tempfile.mktemp(suffix='.png')
+            dot.format = 'png'
+            dot.render(filename=output_path, cleanup=True)
+
+            with open(f'{output_path}.png', 'rb') as f:
+                data = f.read()
+            return jsonify({'success': True,
+                            'diagram': base64.b64encode(data).decode('utf-8'),
+                            'type': 'erd'})
+
+        else:
+            return jsonify({'error': 'Unsupported diagram type'}), 400
+
     except Exception as e:
-        error_msg = f'Unexpected error during diagram generation: {str(e)}'
-        print(error_msg)  # Log the error
-        return jsonify({'error': error_msg}), 500
+        print(f'Error during diagram gen: {e}')
+        return jsonify({'error': str(e)}), 500
+
     finally:
-        # Cleanup temporary files
         try:
             if temp_file and os.path.exists(temp_file):
                 os.unlink(temp_file)
             if output_dir and os.path.exists(output_dir):
-                import shutil
-                shutil.rmtree(output_dir)
+                __import__('shutil').rmtree(output_dir)
             if db_path and os.path.exists(db_path):
                 os.unlink(db_path)
-            if output_path:
-                if os.path.exists(f'{output_path}.png'):
-                    os.unlink(f'{output_path}.png')
-                if os.path.exists(output_path):
-                    os.unlink(output_path)
-        except Exception as e:
-            print(f'Error during cleanup: {str(e)}')  # Log cleanup errors 
+            if output_path and os.path.exists(f'{output_path}.png'):
+                os.unlink(f'{output_path}.png')
+        except Exception as cleanup_err:
+            print(f'Cleanup error: {cleanup_err}')
