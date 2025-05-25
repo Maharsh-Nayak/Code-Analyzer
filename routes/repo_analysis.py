@@ -9,12 +9,16 @@ from .role_analysis import (
     get_initial_codebase_overview,
     generate_multi_role_summary_report
 )
+from utils.feedback_learner import FeedbackLearner
 
 # Load environment variables
 load_dotenv()
 
 # Create blueprint
 repo_analysis = Blueprint('repo_analysis', __name__)
+
+# Initialize feedback learner
+feedback_learner = FeedbackLearner()
 
 # Get API keys from environment variables
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -172,3 +176,27 @@ def analyze_repo():
             return jsonify({"error": f"GitHub API error: {str(e)}"}), e.response.status_code
     except Exception as e:
         return jsonify({"error": f"Error analyzing repository: {str(e)}"}), 500 
+
+@repo_analysis.route('/api/feedback', methods=['POST'])
+def submit_feedback():
+    data = request.json
+    rating = data.get('rating')
+    feedback_text = data.get('feedback_text')
+    additional_data = data.get('additional_data', {})
+
+    if not all([rating, feedback_text]):
+        return jsonify({"error": "Missing required feedback fields"}), 400
+    try:
+        rating = int(rating)
+        if not 1 <= rating <= 5:
+            raise ValueError
+    except ValueError:
+        return jsonify({"error": "Rating must be an integer between 1 and 5"}), 400
+
+    feedback_learner.save_feedback(
+        feedback_type='repo_analysis',
+        rating=rating,
+        feedback_text=feedback_text,
+        additional_data=additional_data
+    )
+    return jsonify({"message": "Feedback saved successfully"}) 
