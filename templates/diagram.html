@@ -103,7 +103,7 @@
 
             outputDiv.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p class="mt-2">Generating diagram...</p></div>';
 
-            fetch('/generate_diagram', {
+            fetch('/diagram-generator/generate_diagram', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
