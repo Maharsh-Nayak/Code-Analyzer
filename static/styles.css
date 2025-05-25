@@ -1,0 +1,54 @@
+/* Custom styles for the application */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Loading overlay */
+#loading {
+    z-index: 1000;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Code output formatting */
+#output {
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1.5;
+    tab-size: 4;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    h1 {
+        font-size: 1.75rem;
+    }
+} 

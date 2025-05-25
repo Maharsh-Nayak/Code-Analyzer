@@ -54,6 +54,7 @@ def analyze_repo():
     data = request.json
     owner = data.get('owner')
     repo = data.get('repo')
+    skip_feedback = data.get('skip_feedback', False)
 
     if not owner or not repo:
         return jsonify({"error": "Missing owner or repository name"}), 400
@@ -71,10 +72,19 @@ def analyze_repo():
         total_bytes = sum(languages.values())
         languages = {lang: (bytes/total_bytes)*100 for lang, bytes in languages.items()}
 
-        return jsonify({
+        response = {
             "structure": "\n".join(structure),
-            "languages": languages
-        })
+            "languages": languages,
+            "requires_feedback": not skip_feedback,
+            "feedback_type": "repo_analysis",
+            "feedback_context": {
+                "owner": owner,
+                "repo": repo,
+                "language_count": len(languages)
+            }
+        }
+        
+        return jsonify(response)
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:
             return jsonify({"error": f"Repository not found: {owner}/{repo}"}), 404

@@ -18,6 +18,7 @@ def generate_diagram():
     print("Received diagram generation request")  # Log request
     code = request.json.get('code', '')
     diagram_type = request.json.get('type', 'uml')  # 'uml' or 'erd'
+    skip_feedback = request.json.get('skip_feedback', False)
     
     print(f"Diagram type: {diagram_type}")  # Log diagram type
     print(f"Code length: {len(code)} characters")  # Log code length
@@ -67,7 +68,13 @@ def generate_diagram():
                     return jsonify({
                         'success': True,
                         'diagram': base64.b64encode(diagram_data).decode('utf-8'),
-                        'type': 'uml'
+                        'type': 'uml',
+                        'requires_feedback': not skip_feedback,
+                        'feedback_type': 'diagram',
+                        'feedback_context': {
+                            'diagram_type': 'uml',
+                            'code_length': len(code)
+                        }
                     })
                 else:
                     # Check if any files were generated
@@ -138,7 +145,14 @@ def generate_diagram():
                 return jsonify({
                     'success': True,
                     'diagram': base64.b64encode(diagram_data).decode('utf-8'),
-                    'type': 'erd'
+                    'type': 'erd',
+                    'requires_feedback': not skip_feedback,
+                    'feedback_type': 'diagram',
+                    'feedback_context': {
+                        'diagram_type': 'erd',
+                        'table_count': len(tables),
+                        'code_length': len(code)
+                    }
                 })
             except Exception as e:
                 error_msg = f'Failed to generate ERD diagram: {str(e)}'

@@ -1,0 +1,349 @@
+{
+    "code_analysis": [
+        {
+            "timestamp": "2025-05-24T19:17:17.222386",
+            "rating": 1,
+            "feedback_text": "i like short answers",
+            "additional_data": {
+                "input_length": 606,
+                "role": "frontend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:18:48.575413",
+            "rating": 1,
+            "feedback_text": "i like small exaplainations",
+            "additional_data": {
+                "input_length": 606,
+                "role": "backend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:18:49.573661",
+            "rating": 1,
+            "feedback_text": "i like small explainations\n",
+            "additional_data": {
+                "input_length": 606,
+                "role": "non-technical"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:25:43.662296",
+            "rating": 1,
+            "feedback_text": "i like short explainations of the codes ",
+            "additional_data": {
+                "improvements": {
+                    "average_rating": 1,
+                    "negative_themes": [
+                        "i like small exaplainations"
+                    ],
+                    "recent_feedback": [
+                        {
+                            "feedback": "i like small exaplainations",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:18:48.575413"
+                        }
+                    ],
+                    "total_feedback": 1
+                },
+                "input_length": 606,
+                "role": "backend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:25:46.233754",
+            "rating": 5,
+            "feedback_text": "i like short ",
+            "additional_data": {
+                "improvements": {
+                    "average_rating": 1,
+                    "negative_themes": [
+                        "i like short answers"
+                    ],
+                    "recent_feedback": [
+                        {
+                            "feedback": "i like short answers",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:17:17.222386"
+                        }
+                    ],
+                    "total_feedback": 1
+                },
+                "input_length": 606,
+                "role": "frontend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:26:15.218576",
+            "rating": 1,
+            "feedback_text": "i like it as much short as possible",
+            "additional_data": {
+                "improvements": {
+                    "average_rating": 1,
+                    "negative_themes": [
+                        "i like small exaplainations"
+                    ],
+                    "recent_feedback": [
+                        {
+                            "feedback": "i like small exaplainations",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:18:48.575413"
+                        }
+                    ],
+                    "total_feedback": 1
+                },
+                "input_length": 606,
+                "role": "backend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:42:52.414271",
+            "rating": 1,
+            "feedback_text": "",
+            "additional_data": {
+                "improvements": {
+                    "average_rating": 3,
+                    "negative_themes": [
+                        "i like short answers"
+                    ],
+                    "recent_feedback": [
+                        {
+                            "feedback": "i like short ",
+                            "rating": 5,
+                            "timestamp": "2025-05-24T19:25:46.233754"
+                        },
+                        {
+                            "feedback": "i like short answers",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:17:17.222386"
+                        }
+                    ],
+                    "total_feedback": 2
+                },
+                "input_length": 4477,
+                "role": "frontend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:43:10.238787",
+            "rating": 4,
+            "feedback_text": "",
+            "additional_data": {
+                "improvements": {
+                    "average_rating": 3,
+                    "negative_themes": [
+                        "i like short answers"
+                    ],
+                    "recent_feedback": [
+                        {
+                            "feedback": "i like short ",
+                            "rating": 5,
+                            "timestamp": "2025-05-24T19:25:46.233754"
+                        },
+                        {
+                            "feedback": "i like short answers",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:17:17.222386"
+                        }
+                    ],
+                    "total_feedback": 2
+                },
+                "input_length": 4477,
+                "role": "frontend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:57:57.665942",
+            "rating": 1,
+            "feedback_text": "i like it as much short as possible\n",
+            "additional_data": {
+                "improvements": {
+                    "average_rating": 2.75,
+                    "negative_themes": [
+                        "i like short answers",
+                        ""
+                    ],
+                    "recent_feedback": [
+                        {
+                            "feedback": "",
+                            "rating": 4,
+                            "timestamp": "2025-05-24T19:43:10.238787"
+                        },
+                        {
+                            "feedback": "",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:42:52.414271"
+                        },
+                        {
+                            "feedback": "i like short ",
+                            "rating": 5,
+                            "timestamp": "2025-05-24T19:25:46.233754"
+                        },
+                        {
+                            "feedback": "i like short answers",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:17:17.222386"
+                        }
+                    ],
+                    "total_feedback": 4
+                },
+                "input_length": 4477,
+                "role": "frontend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:58:34.992198",
+            "rating": 1,
+            "feedback_text": "i dont like extra unnecessary points",
+            "additional_data": {
+                "improvements": {
+                    "average_rating": 2.75,
+                    "negative_themes": [
+                        "i like short answers",
+                        ""
+                    ],
+                    "recent_feedback": [
+                        {
+                            "feedback": "",
+                            "rating": 4,
+                            "timestamp": "2025-05-24T19:43:10.238787"
+                        },
+                        {
+                            "feedback": "",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:42:52.414271"
+                        },
+                        {
+                            "feedback": "i like short ",
+                            "rating": 5,
+                            "timestamp": "2025-05-24T19:25:46.233754"
+                        },
+                        {
+                            "feedback": "i like short answers",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:17:17.222386"
+                        }
+                    ],
+                    "total_feedback": 4
+                },
+                "input_length": 4477,
+                "role": "frontend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:59:04.013192",
+            "rating": 1,
+            "feedback_text": "i like it very short ",
+            "additional_data": {
+                "improvements": {
+                    "average_rating": 2.75,
+                    "negative_themes": [
+                        "i like short answers",
+                        ""
+                    ],
+                    "recent_feedback": [
+                        {
+                            "feedback": "",
+                            "rating": 4,
+                            "timestamp": "2025-05-24T19:43:10.238787"
+                        },
+                        {
+                            "feedback": "",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:42:52.414271"
+                        },
+                        {
+                            "feedback": "i like short ",
+                            "rating": 5,
+                            "timestamp": "2025-05-24T19:25:46.233754"
+                        },
+                        {
+                            "feedback": "i like short answers",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:17:17.222386"
+                        }
+                    ],
+                    "total_feedback": 4
+                },
+                "input_length": 4477,
+                "role": "frontend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T19:59:47.122228",
+            "rating": 1,
+            "feedback_text": "still i want it shorter",
+            "additional_data": {
+                "improvements": {
+                    "average_rating": 2.75,
+                    "negative_themes": [
+                        "i like short answers",
+                        ""
+                    ],
+                    "recent_feedback": [
+                        {
+                            "feedback": "",
+                            "rating": 4,
+                            "timestamp": "2025-05-24T19:43:10.238787"
+                        },
+                        {
+                            "feedback": "",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:42:52.414271"
+                        },
+                        {
+                            "feedback": "i like short ",
+                            "rating": 5,
+                            "timestamp": "2025-05-24T19:25:46.233754"
+                        },
+                        {
+                            "feedback": "i like short answers",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:17:17.222386"
+                        }
+                    ],
+                    "total_feedback": 4
+                },
+                "input_length": 4477,
+                "role": "frontend"
+            }
+        },
+        {
+            "timestamp": "2025-05-24T20:03:23.476184",
+            "rating": 1,
+            "feedback_text": "i like short explainations",
+            "additional_data": {
+                "improvements": {
+                    "average_rating": 1,
+                    "negative_themes": [
+                        "i like small exaplainations",
+                        "i like short explainations of the codes ",
+                        "i like it as much short as possible"
+                    ],
+                    "recent_feedback": [
+                        {
+                            "feedback": "i like it as much short as possible",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:26:15.218576"
+                        },
+                        {
+                            "feedback": "i like short explainations of the codes ",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:25:43.662296"
+                        },
+                        {
+                            "feedback": "i like small exaplainations",
+                            "rating": 1,
+                            "timestamp": "2025-05-24T19:18:48.575413"
+                        }
+                    ],
+                    "total_feedback": 3
+                },
+                "input_length": 4477,
+                "role": "backend"
+            }
+        }
+    ],
+    "repo_analysis": [],
+    "diagram": []
+}
