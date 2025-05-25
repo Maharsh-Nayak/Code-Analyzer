@@ -2,7 +2,10 @@ from flask import Blueprint, request, jsonify, send_from_directory
 import requests
 import json
 import os
+import json
 from dotenv import load_dotenv
+import markdown 
+import re
 
 # Load environment variables
 load_dotenv()
@@ -34,8 +37,12 @@ ROLE_INSTRUCTIONS = {
 }
 
 def call_gemini_api(role, user_input):
-    full_prompt = ROLE_INSTRUCTIONS[role] + user_input
-
+    full_prompt = (
+        ROLE_INSTRUCTIONS[role]
+        + " Please format your response using Markdown. "
+        + "Use **bold**, # headings, bullet points, and emojis where appropriate.\n\n"
+        + user_input
+    )
     payload = {
         "contents": [
             {
@@ -54,7 +61,16 @@ def call_gemini_api(role, user_input):
         )
         response.raise_for_status()
         reply = response.json()
-        return reply['candidates'][0]['content']['parts'][0]['text']
+        raw_markdown = reply['candidates'][0]['content']['parts'][0]['text']
+
+        # ✅ Convert Markdown to HTML
+        html_response = markdown.markdown(
+            raw_markdown,
+            extensions=['fenced_code', 'codehilite', 'nl2br']  # Optional: better formatting
+        )
+
+        return html_response
+    
     except requests.exceptions.Timeout:
         return "Error: Request timed out. Please try again."
     except requests.exceptions.RequestException as e:
@@ -64,9 +80,9 @@ def call_gemini_api(role, user_input):
 
 @code_analysis.route('/')
 def index():
-    return send_from_directory('static', 'index.html')
+    return send_from_directory('templates', 'index.html')
 
-@code_analysis.route('code-analyzer/api/analyze', methods=['POST'])
+@code_analysis.route('code_analysis/api/analyze', methods=['POST'])
 def analyze():
     data = request.json
     role = data.get('role')
