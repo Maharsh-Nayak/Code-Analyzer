@@ -5,6 +5,12 @@ import os
 from dotenv import load_dotenv
 import markdown
 import urllib.parse
+from utils.codebase_analyzer import (
+    get_enhanced_codebase_map_and_perspectives,
+    generate_detailed_perspective_analysis_report,
+    consolidate_analysis_report
+)
+from utils.gemini_client import get_gemini_client
 
 from utils.feedback_learner import FeedbackLearner
 
@@ -214,3 +220,44 @@ def submit_feedback():
         additional_data={'role': role}
     )
     return jsonify({"message": "Feedback saved successfully"})
+
+@code_analysis.route('/analyze', methods=['POST'])
+def analyze_codebase():
+    try:
+        # Get the repository path from the request
+        data = request.get_json()
+        repo_path = data.get('repo_path')
+        
+        if not repo_path or not os.path.exists(repo_path):
+            return jsonify({
+                'error': 'Invalid repository path'
+            }), 400
+
+        # Initialize Gemini client
+        gemini_client = get_gemini_client()
+
+        # Step 1: Get initial codebase map and perspectives
+        codebase_perspectives_json = get_enhanced_codebase_map_and_perspectives(
+            repo_path,
+            gemini_client
+        )
+
+        # Step 2: Generate detailed analysis for each perspective
+        perspective_reports = generate_detailed_perspective_analysis_report(
+            repo_path,
+            codebase_perspectives_json,
+            gemini_client
+        )
+
+        # Step 3: Consolidate the final report
+        final_report = consolidate_analysis_report(
+            codebase_perspectives_json,
+            perspective_reports
+        )
+
+        return jsonify(final_report)
+
+    except Exception as e:
+        return jsonify({
+            'error': str(e)
+        }), 500

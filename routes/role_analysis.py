@@ -3,6 +3,7 @@ import json
 from typing import Dict, List, Optional
 import requests
 from pathlib import Path
+import logging
 
 def get_initial_codebase_overview(repo_path: str, gemini_client) -> Dict:
     """Get initial overview of the codebase using Gemini."""
@@ -79,9 +80,27 @@ Focus on providing accurate, well-reasoned insights based on the available infor
     # Get analysis from Gemini
     try:
         response = gemini_client.generate_text_from_gemini(prompt)
-        return json.loads(response)
+        print("[Gemini Raw Response]:", response)
+        logging.info(f"[Gemini Raw Response]: {response}")
+        if response.strip().startswith('```'):
+            response = response.strip().lstrip('`')
+            if response.lower().startswith('json'):
+                response = response[4:]
+            response = response.rstrip('`')
+        response = response.strip()
+        try:
+            return json.loads(response)
+        except Exception as parse_err:
+            print(f"[Gemini JSON Parse Error]: {parse_err}")
+            logging.error(f"[Gemini JSON Parse Error]: {parse_err}")
+            return {
+                "error": "Failed to parse Gemini response as JSON",
+                "details": str(parse_err),
+                "raw_response": response
+            }
     except Exception as e:
-        print(f"Error getting codebase overview: {str(e)}")
+        print(f"[Gemini API Error]: {str(e)}")
+        logging.error(f"[Gemini API Error]: {str(e)}")
         return {
             "error": "Failed to analyze codebase",
             "details": str(e)
@@ -406,6 +425,27 @@ def parse_gemini_response(response: str) -> Dict:
             "raw_response": response
         }
 
+def parse_stringified_json(obj):
+    """Recursively parse stringified JSON objects/arrays in a dict or list, even if deeply nested."""
+    import json
+    def try_parse(val):
+        if isinstance(val, str):
+            val_strip = val.strip()
+            # Only try to parse if it looks like JSON
+            if (val_strip.startswith('{') and val_strip.endswith('}')) or (val_strip.startswith('[') and val_strip.endswith(']')):
+                try:
+                    parsed = json.loads(val_strip)
+                    # Recursively parse the result
+                    return try_parse(parsed)
+                except Exception:
+                    return val
+        elif isinstance(val, list):
+            return [try_parse(item) for item in val]
+        elif isinstance(val, dict):
+            return {k: try_parse(v) for k, v in val.items()}
+        return val
+    return try_parse(obj)
+
 def generate_multi_role_summary_report(repo_path: str, overview_json: Dict, gemini_client) -> Dict:
     """Generate comprehensive role-specific summaries."""
     roles = ["frontend", "backend", "data", "product"]
@@ -427,6 +467,8 @@ def generate_multi_role_summary_report(repo_path: str, overview_json: Dict, gemi
         try:
             response = gemini_client.generate_text_from_gemini(prompt)
             role_summary = parse_gemini_response(response)
+            # Recursively parse stringified JSON in the summary
+            role_summary = parse_stringified_json(role_summary)
             report["role_summaries"][f"{role}_summary"] = role_summary
         except Exception as e:
             print(f"Error generating {role} summary: {str(e)}")

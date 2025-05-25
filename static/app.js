@@ -138,4 +138,66 @@ document.addEventListener('DOMContentLoaded', () => {
             analyzeCode();
         }
     });
+
+    // Codebase Analysis
+    async function analyzeCodebase(repoPath) {
+        try {
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ repo_path: repoPath })
+            });
+
+            if (!response.ok) {
+                throw new Error('Analysis failed');
+            }
+
+            const report = await response.json();
+            return report;
+        } catch (error) {
+            console.error('Error analyzing codebase:', error);
+            throw error;
+        }
+    }
+
+    // Update the submit button handler
+    document.getElementById('submit').addEventListener('click', async () => {
+        const repoPath = document.getElementById('input').value.trim();
+        if (!repoPath) {
+            alert('Please enter a repository path');
+            return;
+        }
+
+        // Show loading overlay
+        document.getElementById('loading').classList.remove('hidden');
+
+        try {
+            const report = await analyzeCodebase(repoPath);
+            
+            // Render the report
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = ''; // Clear previous content
+            
+            // Create and mount the AnalysisReport component
+            const reportContainer = document.createElement('div');
+            reportContainer.id = 'analysis-report';
+            outputDiv.appendChild(reportContainer);
+            
+            // Initialize React component
+            ReactDOM.render(
+                React.createElement(AnalysisReport, { report }),
+                reportContainer
+            );
+
+            // Show feedback form
+            document.getElementById('feedback-form').classList.remove('hidden');
+        } catch (error) {
+            document.getElementById('output').innerHTML = `Error: ${error.message}`;
+        } finally {
+            // Hide loading overlay
+            document.getElementById('loading').classList.add('hidden');
+        }
+    });
 }); 
