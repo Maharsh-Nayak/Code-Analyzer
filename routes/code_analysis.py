@@ -180,14 +180,19 @@ def call_gemini_api(role: str, user_input: str, use_rag: bool = False) -> str:
 
 @code_analysis.route('/')
 def index():
-    return send_from_directory('templates', 'index.html')
+    return send_from_directory('templates', 'analyze.html')
 
-@code_analysis.route('code_analysis/api/analyze', methods=['POST'])
+@code_analysis.route('code-analyzer/api/analyze', methods=['POST'])
 def analyze():
+    print("Received request to analyze code")
     data = request.json
     role = data.get('role')
-    user_input = data.get('input')
-    use_rag = bool(data.get('use_rag', False))
+    user_input = data.get('code')
+    use_rag = bool(data.get('analysisType', False))
+
+    print("Role:", role)
+    print("User Input:", user_input)
+    print("Use RAG:", use_rag)
 
     if not role or role not in ROLE_INSTRUCTIONS:
         return jsonify({"error": f"Invalid role '{role}'. Must be one of {list(ROLE_INSTRUCTIONS.keys())}."}), 400
@@ -195,6 +200,7 @@ def analyze():
         return jsonify({"error": "Empty input"}), 400
 
     result_html = call_gemini_api(role, user_input, use_rag)
+    print("Result HTML:", result_html)
     return jsonify({"response": result_html})
 
 @code_analysis.route('code_analysis/api/feedback', methods=['POST'])

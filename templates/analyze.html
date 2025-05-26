@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Analyze Repository - Code Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+    <link rel="stylesheet" href="../static/styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <style>
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+}
+
+        .analysis-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .selectors-grid {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .selector-group {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .selector-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .selector-input {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .analysis-body {
+            display: flex;
+            flex-direction: row;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .left-panel {
+            flex: 2;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            flex: 1;
+            min-width: 300px;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f9f9f9;
+        }
+
+        .input-group {
+            margin-top: 1.5rem;
+        }
+
+        .input-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .action-buttons {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-icon {
+            margin-right: 0.5rem;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .output-title {
+            margin: 0;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .copy-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .scrollable-output {
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .feedback-section {
+            margin-top: 2rem;
+        }
+
+        .rating-group {
+            margin-top: 1rem;
+        }
+
+        .rating-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .rating-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ccc;
+            background-color: #eee;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .feedback-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .analysis-body {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="global-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">Code Analyzer</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="http://localhost:5000/repo-analyzer" class="nav-link">Analyze Repository</a>
+                <a href="http://localhost:5000/diagram-generator" class="nav-link">Diagram</a>
+                <a href="http://localhost:5000/code-analyzer" class="nav-link">Code Analyzer</a>
+                <a href="/about" class="nav-link">About</a>
+                <a href="/docs" class="nav-link">Docs</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-container">
+        <main class="main-content">
+            <div class="content-header">
+                <h2 class="section-title">Repository Analysis</h2>
+                <p class="section-description">Get AI-powered insights about your codebase</p>
+            </div>
+
+            <div class="analysis-container">
+                <!-- Role and Analysis Type Selectors -->
+                <div class="selectors-grid">
+                    <div class="selector-group">
+                        <label for="role" class="selector-label">Select Role</label>
+                        <select id="role" class="selector-input">
+                            <option value="frontend">Frontend Developer</option>
+                            <option value="backend">Backend Developer</option>
+                            <option value="non-technical">Non-Technical</option>
+                        </select>
+                    </div>
+                    <div class="selector-group">
+                        <label for="analysis-type" class="selector-label">Analysis Type</label>
+                        <select id="analysis-type" class="selector-input">
+                            <option value="standard">Standard Analysis</option>
+                            <option value="rag">RAG-Enhanced Analysis</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Flex Container for Input & Output -->
+                <div class="analysis-body">
+                    <!-- Left Side -->
+                    <div class="left-panel">
+                        <div class="input-group">
+                            <label for="input" class="input-label">Enter your code or question</label>
+                            <textarea id="input" class="code-input" rows="6" placeholder="Paste your code here or ask a question..."></textarea>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button id="code-submit" class="btn btn-primary">
+                                <span class="btn-icon">⚡</span> Analyze Code
+                            </button>
+                            <button id="clear" class="btn btn-secondary">
+                                <span class="btn-icon">↺</span> Clear
+                            </button>
+                        </div>
+
+                        <!-- Feedback -->
+                        <div id="feedback-form" class="feedback-section hidden">
+                            <h3 class="feedback-title">How was this analysis?</h3>
+                            <div class="rating-group">
+                                <div class="rating-label">Rating</div>
+                                <div class="rating-buttons">
+                                    <button class="rating-btn" data-rating="1">1</button>
+                                    <button class="rating-btn" data-rating="2">2</button>
+                                    <button class="rating-btn" data-rating="3">3</button>
+                                    <button class="rating-btn" data-rating="4">4</button>
+                                    <button class="rating-btn" data-rating="5">5</button>
+                                </div>
+                            </div>
+                            <div class="feedback-input-group mt-3">
+                                <label for="feedback-text" class="feedback-label">Additional Feedback (optional)</label>
+                                <textarea id="feedback-text" class="feedback-textarea" rows="3" placeholder="Share your thoughts about the analysis..."></textarea>
+                            </div>
+                            <button id="submit-feedback" class="btn btn-primary mt-2">Submit Feedback</button>
+                        </div>
+                    </div>
+
+                    <!-- Right Side -->
+                    <div class="right-panel">
+                        <div class="output-section">
+                            <div class="output-header">
+                                <h3 class="output-title">Analysis Result</h3>
+                                <button class="copy-btn" title="Copy to clipboard">
+                                    <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div id="output" class="output-content scrollable-output">
+                                <!-- Your analysis result will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Analyzing your code...</p>
+        </div>
+    </div>
+
+    <script src="../static/app.js"></script>
+</body>
+</html>

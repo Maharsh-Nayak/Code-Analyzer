@@ -176,8 +176,31 @@
             border-color: #0d6efd;
         }
     </style>
+    <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
+    <!-- Global Navigation -->
+  <nav class="global-nav">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 3H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path>
+          <path d="M20 3h-5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path>
+          <path d="M9 14H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2z"></path>
+          <path d="M20 14h-5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2z"></path>
+        </svg>
+        Code Analyzer
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link active">Home</a>
+        <a href="http://localhost:5000/repo-analyzer" class="nav-link">Analyze Repository</a>
+        <a href="http://localhost:5000/diagram-generator" class="nav-link">Diagram</a>
+        <a href="http://localhost:5000/code-analyzer" class="nav-link">Code Analyzer</a>
+        <a href="/about" class="nav-link">About</a>
+        <a href="/docs" class="nav-link">Docs</a>
+      </div>
+    </div>
+  </nav>
     <div class="container">
         <h1 class="text-center mb-4">Repository Analyzer</h1>
         
@@ -210,7 +233,7 @@
         <div id="error" class="error" style="display: none;"></div>
 
         <div id="results" style="display: none;">
-            <ul class="nav nav-tabs" id="analysisTabs" role="tablist">
+            <ul class="nav nav-tabs flex-nowrap overflow-auto" style="white-space: nowrap;" id="analysisTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">Overview</button>
                 </li>
@@ -234,7 +257,7 @@
                 </li>
             </ul>
 
-            <div class="tab-content" id="analysisTabContent">
+            <div class="tab-content" id="analysisTabContent" style = "color: black">
                 <div class="tab-pane fade show active" id="overview" role="tabpanel">
                     <div id="overviewContent"></div>
                 </div>

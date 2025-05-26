@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code Diagram Generator</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="../static/styles.css">
     <style>
         .code-editor {
             height: 300px;
@@ -48,27 +48,28 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">Code Analyzer</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Code Analysis</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/repo">Repository Analysis</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/diagram">Diagram Generator</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+     <!-- Global Navigation -->
+  <nav class="global-nav">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 3H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path>
+          <path d="M20 3h-5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path>
+          <path d="M9 14H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2z"></path>
+          <path d="M20 14h-5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2z"></path>
+        </svg>
+        Code Analyzer
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link active">Home</a>
+        <a href="http://localhost:5000/repo-analyzer" class="nav-link">Analyze Repository</a>
+        <a href="http://localhost:5000/diagram-generator" class="nav-link">Diagram</a>
+        <a href="http://localhost:5000/code-analyzer" class="nav-link">Code Analyzer</a>
+        <a href="/about" class="nav-link">About</a>
+        <a href="/docs" class="nav-link">Docs</a>
+      </div>
+    </div>
+  </nav>
 
     <div class="container mt-4">
         <h2>Code Diagram Generator</h2>

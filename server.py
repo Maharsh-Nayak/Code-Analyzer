@@ -4,10 +4,18 @@ from routes.repo_analysis import repo_analysis
 from routes.diagram import diagram
 from routes.feedback import feedback
 import os
+import os
+from flask import request, redirect, render_template, session, url_for
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__, 
     static_folder='static',
     static_url_path='/static')
+app.secret_key = os.urandom(24)
+
+# Temporary user storage (replace with database in production)
+users = {}
 
 # Register blueprints
 app.register_blueprint(code_analysis, url_prefix='/code-analyzer')
@@ -17,7 +25,7 @@ app.register_blueprint(feedback, url_prefix='/feedback')
 
 @app.route('/')
 def home():
-    return send_from_directory('static', 'home.html')
+    return send_from_directory('templates', 'index.html')
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True)
