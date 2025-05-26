@@ -17,7 +17,7 @@ feedback_learner = FeedbackLearner()
 def diagram_page():
     return render_template('diagram.html')
 
-@diagram.route('/diagram-generator/generate_diagram', methods=['POST'])
+@diagram.route('/generate_diagram', methods=['POST'])
 def generate_diagram():
     print("Received diagram generation request")
     code = request.json.get('code', '')
