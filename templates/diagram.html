@@ -203,7 +203,9 @@
             }
 
             outputDiv.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p class="mt-2">Generating diagram...</p></div>';
-
+            console.log("sending code to server")
+            console.log(code)
+            console.log(diagramType)
             fetch('/diagram-generator/generate_diagram', {
                 method: 'POST',
                 headers: {
