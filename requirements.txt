@@ -9,3 +9,4 @@ google-generativeai==0.3.2
 mistune==3.0.2
 markdown==3.5.2
 gitpython==3.1.43
+gunicorn
