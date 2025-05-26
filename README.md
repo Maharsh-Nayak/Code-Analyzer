@@ -59,6 +59,4 @@ The application is built with:
 - Internet connection for API access
 - Valid Gemini API key
 
-## Security Note
-
-Never commit your API key to version control. Always use environment variables or a secure configuration management system. 
+Deployment link : https://code-analyzer-h3ov.onrender.com
