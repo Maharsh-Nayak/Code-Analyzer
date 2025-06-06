@@ -1,17 +1,14 @@
 from flask import Blueprint, request, jsonify, render_template
 import tempfile
 import os
-import graphviz
-from sqlalchemy import create_engine, inspect
 import base64
+import ast
+from sqlalchemy import create_engine, inspect
 from utils.feedback_learner import FeedbackLearner
 from plantuml import PlantUML
-import ast
 
 # Create blueprint
 diagram = Blueprint('diagram', __name__)
-
-# Initialize feedback learner
 feedback_learner = FeedbackLearner()
 
 @diagram.route('/')
@@ -20,35 +17,23 @@ def diagram_page():
 
 @diagram.route('/generate_diagram', methods=['POST'])
 def generate_diagram():
-    print("Received diagram generation request")
     code = request.json.get('code', '')
     diagram_type = request.json.get('type', 'uml')  # 'uml' or 'erd'
-
-    print(f"Diagram type: {diagram_type}")
-    print(f"Code length: {len(code)} characters")
 
     if not code:
         return jsonify({'error': 'No code provided'}), 400
 
-    db_path = None
-    output_path = None
-
     try:
         if diagram_type == 'uml':
-            print("Generating UML diagram using PlantUML HTTP API")
-
-            def generate_plantuml_from_python(code_str):
+            # === UML Generation with PlantUML ===
+            def generate_uml(code_str):
                 tree = ast.parse(code_str)
                 classes = {}
-
                 for node in ast.walk(tree):
                     if isinstance(node, ast.ClassDef):
-                        base_classes = [base.id for base in node.bases if isinstance(base, ast.Name)]
+                        base_classes = [b.id for b in node.bases if isinstance(b, ast.Name)]
                         methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
-                        classes[node.name] = {
-                            "bases": base_classes,
-                            "methods": methods
-                        }
+                        classes[node.name] = {'bases': base_classes, 'methods': methods}
 
                 lines = ["@startuml", "skinparam classAttributeIconSize 0"]
                 for cls, data in classes.items():
@@ -62,23 +47,14 @@ def generate_diagram():
                 lines.append("@enduml")
                 return "\n".join(lines)
 
-            plantuml_code = generate_plantuml_from_python(code)
-
-            # Send to public PlantUML server
-            server = PlantUML(url='http://www.plantuml.com/plantuml/img/')
-            image_data = server.processes(plantuml_code)
-
-            return jsonify({
-                'success': True,
-                'diagram': base64.b64encode(image_data).decode('utf-8'),
-                'type': 'uml'
-            })
+            plantuml_code = generate_uml(code)
 
         elif diagram_type == 'erd':
-            print("Generating ERD using Graphviz")
+            # === ERD Generation with SQL + PlantUML ===
             db_path = tempfile.mktemp(suffix='.db')
             engine = create_engine(f'sqlite:///{db_path}')
 
+            # Use raw connection to execute multiple SQL statements
             raw_conn = engine.raw_connection()
             try:
                 cursor = raw_conn.cursor()
@@ -89,64 +65,40 @@ def generate_diagram():
 
             inspector = inspect(engine)
             tables = inspector.get_table_names()
-            dot = graphviz.Digraph(comment='ER Diagram', format='png')
 
+            lines = ["@startuml", "hide circle", "skinparam linetype ortho"]
             for table in tables:
-                cols = inspector.get_columns(table)
-                label = f'''<
-<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
-  <TR><TD BGCOLOR="lightblue" COLSPAN="2"><B>{table}</B></TD></TR>
-'''
-                for c in cols:
-                    name, typ = c['name'], str(c['type'])
-                    pk = c.get('primary_key', False)
-                    nn = not c.get('nullable', True)
-                    style = 'BGCOLOR="palegreen"' if pk else ('BGCOLOR="mistyrose"' if nn else '')
-                    pk_text = ' PK' if pk else ''
-                    nn_text = ' NOT NULL' if nn else ''
-                    label += f'<TR><TD ALIGN="LEFT" {style}>{name}{pk_text}</TD><TD ALIGN="LEFT">{typ}{nn_text}</TD></TR>\n'
-                label += '</TABLE>>'
-                dot.node(table, label=label, _attributes={'labeltype': 'html'})
-
+                lines.append(f"entity {table} {{")
+                for column in inspector.get_columns(table):
+                    name = column['name']
+                    coltype = str(column['type'])
+                    lines.append(f"  {name} : {coltype}")
+                lines.append("}")
             for table in tables:
                 for fk in inspector.get_foreign_keys(table):
-                    src_cols = fk.get('constrained_columns') or []
-                    tgt_table = fk.get('referred_table')
-                    tgt_cols = fk.get('referred_columns') or []
-                    if not tgt_table:
-                        continue
-                    for src, tgt in zip(src_cols, tgt_cols):
-                        dot.edge(table, tgt_table, label=f'FK: {src}→{tgt}', color='blue')
+                    if fk['referred_table']:
+                        lines.append(f"{fk['referred_table']} ||--o{{ {table} : FK")
+            lines.append("@enduml")
 
-            engine.dispose()  # <-- Ensure DB file is released on Windows
-
-            output_path = tempfile.mktemp(suffix='.png')
-            dot.render(filename=output_path, cleanup=True)
-
-            with open(f'{output_path}.png', 'rb') as f:
-                data = f.read()
-
-            return jsonify({
-                'success': True,
-                'diagram': base64.b64encode(data).decode('utf-8'),
-                'type': 'erd'
-            })
+            plantuml_code = "\n".join(lines)
+            engine.dispose()
+            os.unlink(db_path)
 
         else:
             return jsonify({'error': 'Unsupported diagram type'}), 400
 
-    except Exception as e:
-        print(f'Error during diagram gen: {e}')
-        return jsonify({'error': str(e)}), 500
+        # Send PlantUML code to public PlantUML server
+        server = PlantUML(url='http://www.plantuml.com/plantuml/img/')
+        image_data = server.processes(plantuml_code)
 
-    finally:
-        try:
-            if db_path and os.path.exists(db_path):
-                os.unlink(db_path)
-            if output_path and os.path.exists(f'{output_path}.png'):
-                os.unlink(f'{output_path}.png')
-        except Exception as cleanup_err:
-            print(f'Cleanup error: {cleanup_err}')
+        return jsonify({
+            'success': True,
+            'diagram': base64.b64encode(image_data).decode('utf-8'),
+            'type': diagram_type
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @diagram.route('/api/feedback', methods=['POST'])
 def submit_feedback():
