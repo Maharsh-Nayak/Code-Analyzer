@@ -78,7 +78,8 @@ def generate_diagram():
                 'type': 'uml'
             })
 
-        elif diagram_type == 'erd':
+                elif diagram_type == 'erd':
+            print("Generating ERD using ERAlchemy with PlantUML backend")
             db_path = tempfile.mktemp(suffix='.db')
             engine = create_engine(f'sqlite:///{db_path}')
 
@@ -90,14 +91,27 @@ def generate_diagram():
             finally:
                 raw_conn.close()
 
-            dot = graphviz.Digraph(comment='Database Schema')
-            dot.attr(rankdir='LR')
-            dot.attr('node', shape='plaintext')
+            # Generate PlantUML file using ERAlchemy
+            puml_output = tempfile.mktemp(suffix=".puml")
+            subprocess.run([
+                "eralchemy",
+                "-i", f"sqlite:///{db_path}",
+                "-o", puml_output,
+                "--plantuml"
+            ], check=True)
 
-            inspector = inspect(engine)
-            tables = inspector.get_table_names()
-            if not tables:
-                return jsonify({'error': 'No tables found in SQL'}), 400
+            # Now render the PlantUML using the public PlantUML server
+            with open(puml_output, "r") as f:
+                puml_code = f.read()
+
+            server = PlantUML(url='http://www.plantuml.com/plantuml/img/')
+            image_data = server.processes(puml_code)
+
+            return jsonify({
+                'success': True,
+                'diagram': base64.b64encode(image_data).decode('utf-8'),
+                'type': 'erd'
+            })
 
             for table in tables:
                 cols = inspector.get_columns(table)
