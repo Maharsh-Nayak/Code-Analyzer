@@ -1,52 +1,27 @@
-# # Use an official lightweight Python image
-# FROM python:3.9-slim
+# Use a full Python image (not slim) to avoid missing system dependencies
+FROM python:3.9
 
-# # Install Java, graphviz and extra deps to support dot and related libs
-# RUN apt-get update && apt-get install -y \
-#     default-jre \
-#     graphviz \
-#     graphviz-dev \
-#     libcairo2-dev \
-#     pkg-config \
-#     && rm -rf /var/lib/apt/lists/*
-
-# # Verify dot is installed and in PATH (for debug, optional)
-# RUN which dot && dot -V
-
-# # Set environment PATH explicitly (optional, but safer)
-# ENV PATH="/usr/bin:${PATH}"
-# ENV GRAPHVIZ_DOT=/usr/bin/dot
-
-# # Set working directory inside the container
-# WORKDIR /app
-
-# # Copy all project files to the container
-# COPY . /app
-
-# # Install Python dependencies
-# RUN pip install --no-cache-dir -r requirements.txt
-
-# # Expose the port your Flask app runs on (match app.run port)
-# EXPOSE 10000
-
-# # Start the app using Gunicorn (recommended for production)
-# CMD ["gunicorn", "--bind", "0.0.0.0:10000", "server:app"]
-
-FROM python:3.9-slim
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install Java (required by PlantUML), Graphviz (includes dot), and clean up
+RUN apt-get update && apt-get install -y \
     default-jre \
     graphviz \
     && rm -rf /var/lib/apt/lists/*
 
-RUN which dot && dot -V
-
+# Set environment variables so the Python graphviz package can find dot
 ENV PATH="/usr/bin:${PATH}"
 ENV GRAPHVIZ_DOT=/usr/bin/dot
 
+# Set the working directory inside the container
 WORKDIR /app
+
+# Copy all project files into the container
 COPY . /app
+
+# Install Python dependencies from requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose the Flask/Gunicorn port
 EXPOSE 10000
 
+# Start the Flask app using Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:10000", "server:app"]
