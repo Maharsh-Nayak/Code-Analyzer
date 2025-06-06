@@ -2,13 +2,11 @@ from flask import Blueprint, request, jsonify, render_template
 import tempfile
 import os
 import graphviz
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import create_engine, inspect
 import base64
 from utils.feedback_learner import FeedbackLearner
 from plantuml import PlantUML
 import ast
-import subprocess
-from flask import jsonify
 
 # Create blueprint
 diagram = Blueprint('diagram', __name__)
@@ -17,8 +15,6 @@ diagram = Blueprint('diagram', __name__)
 feedback_learner = FeedbackLearner()
 
 @diagram.route('/')
-
-    
 def diagram_page():
     return render_template('diagram.html')
 
@@ -78,8 +74,8 @@ def generate_diagram():
                 'type': 'uml'
             })
 
-                elif diagram_type == 'erd':
-            print("Generating ERD using ERAlchemy with PlantUML backend")
+        elif diagram_type == 'erd':
+            print("Generating ERD using Graphviz")
             db_path = tempfile.mktemp(suffix='.db')
             engine = create_engine(f'sqlite:///{db_path}')
 
@@ -91,27 +87,9 @@ def generate_diagram():
             finally:
                 raw_conn.close()
 
-            # Generate PlantUML file using ERAlchemy
-            puml_output = tempfile.mktemp(suffix=".puml")
-            subprocess.run([
-                "eralchemy",
-                "-i", f"sqlite:///{db_path}",
-                "-o", puml_output,
-                "--plantuml"
-            ], check=True)
-
-            # Now render the PlantUML using the public PlantUML server
-            with open(puml_output, "r") as f:
-                puml_code = f.read()
-
-            server = PlantUML(url='http://www.plantuml.com/plantuml/img/')
-            image_data = server.processes(puml_code)
-
-            return jsonify({
-                'success': True,
-                'diagram': base64.b64encode(image_data).decode('utf-8'),
-                'type': 'erd'
-            })
+            inspector = inspect(engine)
+            tables = inspector.get_table_names()
+            dot = graphviz.Digraph(comment='ER Diagram', format='png')
 
             for table in tables:
                 cols = inspector.get_columns(table)
@@ -140,15 +118,19 @@ def generate_diagram():
                     for src, tgt in zip(src_cols, tgt_cols):
                         dot.edge(table, tgt_table, label=f'FK: {src}→{tgt}', color='blue')
 
+            engine.dispose()  # <-- Ensure DB file is released on Windows
+
             output_path = tempfile.mktemp(suffix='.png')
-            dot.format = 'png'
             dot.render(filename=output_path, cleanup=True)
 
             with open(f'{output_path}.png', 'rb') as f:
                 data = f.read()
-            return jsonify({'success': True,
-                            'diagram': base64.b64encode(data).decode('utf-8'),
-                            'type': 'erd'})
+
+            return jsonify({
+                'success': True,
+                'diagram': base64.b64encode(data).decode('utf-8'),
+                'type': 'erd'
+            })
 
         else:
             return jsonify({'error': 'Unsupported diagram type'}), 400
