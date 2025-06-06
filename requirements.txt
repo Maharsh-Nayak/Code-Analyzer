@@ -12,3 +12,4 @@ gitpython==3.1.43
 gunicorn
 plantuml 
 six==1.17.0
+eralchemy==1.2.11
