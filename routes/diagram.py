@@ -7,6 +7,8 @@ import base64
 from utils.feedback_learner import FeedbackLearner
 from plantuml import PlantUML
 import ast
+import subprocess
+from flask import jsonify
 
 # Create blueprint
 diagram = Blueprint('diagram', __name__)
@@ -15,6 +17,14 @@ diagram = Blueprint('diagram', __name__)
 feedback_learner = FeedbackLearner()
 
 @diagram.route('/')
+def check_dot():
+    try:
+        path = subprocess.check_output(['which', 'dot']).decode().strip()
+        version = subprocess.check_output(['dot', '-V'], stderr=subprocess.STDOUT).decode().strip()
+        return jsonify({"dot_path": path, "dot_version": version})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 def diagram_page():
     return render_template('diagram.html')
 

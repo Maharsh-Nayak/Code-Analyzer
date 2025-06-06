@@ -25,5 +25,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose the port your Flask app runs on (match app.run port)
 EXPOSE 10000
 
+ENV GRAPHVIZ_DOT=/usr/bin/dot
+
 # Start the app using Gunicorn (recommended for production)
 CMD ["gunicorn", "--bind", "0.0.0.0:10000", "server:app"]
