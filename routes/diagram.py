@@ -1,11 +1,12 @@
 from flask import Blueprint, request, jsonify, render_template
 import tempfile
-import subprocess
 import os
 import graphviz
 from sqlalchemy import create_engine, text, inspect
 import base64
 from utils.feedback_learner import FeedbackLearner
+from plantuml import PlantUML
+import ast
 
 # Create blueprint
 diagram = Blueprint('diagram', __name__)
@@ -29,17 +30,14 @@ def generate_diagram():
     if not code:
         return jsonify({'error': 'No code provided'}), 400
 
-    temp_file = None
-    output_dir = None
     db_path = None
     output_path = None
 
     try:
         if diagram_type == 'uml':
-            print("Generating UML diagram using PlantUML")
+            print("Generating UML diagram using PlantUML HTTP API")
 
             def generate_plantuml_from_python(code_str):
-                import ast
                 tree = ast.parse(code_str)
                 classes = {}
 
@@ -66,36 +64,15 @@ def generate_diagram():
 
             plantuml_code = generate_plantuml_from_python(code)
 
-            with tempfile.NamedTemporaryFile(suffix='.puml', delete=False, mode='w', encoding='utf-8') as f:
-                f.write(plantuml_code)
-                temp_file = f.name
+            # Send to public PlantUML server
+            server = PlantUML(url='http://www.plantuml.com/plantuml/img/')
+            image_data = server.processes(plantuml_code)
 
-            output_dir = tempfile.mkdtemp()
-
-            plantuml_jar_path = os.path.join(os.path.dirname(__file__), 'plantuml.jar')
-            result = subprocess.run(
-                ['java', '-jar', plantuml_jar_path, '-tpng', '-o', output_dir, temp_file],
-                capture_output=True, text=True
-            )
-
-            if result.returncode != 0:
-                raise Exception(f"PlantUML failed: {result.stderr}")
-
-            # Correctly find the generated PNG file (PlantUML names it after input file)
-            png_files = [f for f in os.listdir(output_dir) if f.endswith('.png')]
-
-            if png_files:
-                output_path = os.path.join(output_dir, png_files[0])  # get first png file
-                with open(output_path, 'rb') as f:
-                    data = f.read()
-                return jsonify({
-                    'success': True,
-                    'diagram': base64.b64encode(data).decode('utf-8'),
-                    'type': 'uml'
-                })
-            else:
-                files = os.listdir(output_dir)
-                return jsonify({'error': f'No UML output. Files: {files}'}), 500
+            return jsonify({
+                'success': True,
+                'diagram': base64.b64encode(image_data).decode('utf-8'),
+                'type': 'uml'
+            })
 
         elif diagram_type == 'erd':
             db_path = tempfile.mktemp(suffix='.db')
@@ -164,10 +141,6 @@ def generate_diagram():
 
     finally:
         try:
-            if temp_file and os.path.exists(temp_file):
-                os.unlink(temp_file)
-            if output_dir and os.path.exists(output_dir):
-                __import__('shutil').rmtree(output_dir)
             if db_path and os.path.exists(db_path):
                 os.unlink(db_path)
             if output_path and os.path.exists(f'{output_path}.png'):
