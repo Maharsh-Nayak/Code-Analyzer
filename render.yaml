@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: code-analyzer
+    env: docker
+    plan: free
+    autoDeploy: true
+    region: oregon
+    dockerfilePath: Dockerfile
+    healthCheckPath: /
+    # Specify the port your app listens on (matches app.run port in server.py)
+    ports:
+      - 10000
+    envVars:
+      - key: GEMINI_API_KEY
+        value: AIzaSyCb9APnGgeAe4Wz7jw7plHOa4UKcAQycYc
