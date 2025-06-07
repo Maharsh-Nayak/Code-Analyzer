@@ -114,7 +114,7 @@ class GeminiClient:
 def repo_analyzer():
     return send_from_directory('templates', 'repo_analyzer.html')
 
-@repo_analysis.route('/repo_analyzer/api/analyze-repo', methods=['POST'])
+@repo_analysis.route('/api/analyze-repo', methods=['POST'])
 def analyze_repo():
     """Main endpoint for repository analysis."""
     data = request.json
