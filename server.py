@@ -3,6 +3,8 @@ from routes.code_analysis import code_analysis
 from routes.repo_analysis import repo_analysis
 from routes.diagram import diagram
 from routes.feedback import feedback
+from routes.about import about
+
 import os
 import os
 from flask import request, redirect, render_template, session, url_for
