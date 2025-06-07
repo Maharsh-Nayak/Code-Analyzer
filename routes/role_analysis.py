@@ -5,7 +5,7 @@ import requests
 from pathlib import Path
 import logging
 
-def get_initial_codebase_overview_from_api(repo_path: str, gemini_client) -> Dict:
+def get_initial_codebase_overview(repo_path: str, gemini_client) -> Dict:
     """Get initial overview of the codebase using Gemini."""
     # Get directory structure
     structure = []
@@ -446,7 +446,7 @@ def parse_stringified_json(obj):
         return val
     return try_parse(obj)
 
-def generate_multi_role_summary_report_from_api(repo_path: str, overview_json: Dict, gemini_client) -> Dict:
+def generate_multi_role_summary_report(repo_path: str, overview_json: Dict, gemini_client) -> Dict:
     """Generate comprehensive role-specific summaries."""
     roles = ["frontend", "backend", "data", "product"]
     report = {
