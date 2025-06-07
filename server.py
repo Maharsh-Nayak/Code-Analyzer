@@ -22,6 +22,7 @@ app.register_blueprint(code_analysis, url_prefix='/code-analyzer')
 app.register_blueprint(repo_analysis, url_prefix='/repo-analyzer')
 app.register_blueprint(diagram, url_prefix='/diagram-generator')
 app.register_blueprint(feedback, url_prefix='/feedback')
+app.register_blueprint(about,url_prefix='/about')
 
 @app.route('/')
 def home():
