@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify, send_from_directory
 import requests
 import os
+import base64
+
 from dotenv import load_dotenv
 from typing import Optional
 from .role_analysis import (
