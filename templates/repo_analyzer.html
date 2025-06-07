@@ -335,7 +335,7 @@
             document.getElementById('results').style.display = 'none';
             
             try {
-                const response = await fetch('repo_analyzer/api/analyze-repo', {
+                const response = await fetch('/repo_analyzer/api/analyze-repo', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
