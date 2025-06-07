@@ -385,7 +385,7 @@
             const repoUrl = document.getElementById('repoUrl').value;
 
             try {
-                const response = await fetch('/api/feedback', {
+                const response = await fetch('repo-analyzer/api/feedback', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
