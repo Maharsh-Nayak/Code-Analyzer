@@ -2,12 +2,10 @@ from flask import Blueprint, request, jsonify, send_from_directory
 import requests
 import os
 from dotenv import load_dotenv
-import base64
-import json
-from typing import Dict, List, Optional
+from typing import Optional
 from .role_analysis import (
-    get_initial_codebase_overview,
-    generate_multi_role_summary_report
+    get_initial_codebase_overview_from_api,
+    generate_multi_role_summary_report_from_api
 )
 from utils.feedback_learner import FeedbackLearner
 
@@ -20,7 +18,7 @@ repo_analysis = Blueprint('repo_analysis', __name__)
 # Initialize feedback learner
 feedback_learner = FeedbackLearner()
 
-# Get API keys from environment variables
+# Get API keys
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -37,11 +35,23 @@ def get_repo_contents(owner, repo, path=''):
     response.raise_for_status()
     return response.json()
 
-def get_repo_languages(owner, repo):
-    url = f'https://api.github.com/repos/{owner}/{repo}/languages'
-    response = requests.get(url, headers=get_github_headers())
-    response.raise_for_status()
-    return response.json()
+def get_file_content(owner, repo, path):
+    contents = get_repo_contents(owner, repo, path)
+    if contents.get('encoding') == 'base64':
+        return base64.b64decode(contents['content']).decode('utf-8')
+    return ""
+
+def get_all_code_files(owner, repo, path=''):
+    code_files = []
+    items = get_repo_contents(owner, repo, path)
+    for item in items:
+        if item['type'] == 'file':
+            if item['name'].endswith(('.py', '.js', '.ts', '.jsx', '.tsx', '.html', '.css', '.java', '.go')):
+                content = get_file_content(owner, repo, item['path'])
+                code_files.append({'path': item['path'], 'content': content})
+        elif item['type'] == 'dir':
+            code_files.extend(get_all_code_files(owner, repo, item['path']))
+    return code_files
 
 def format_directory_structure(contents, prefix='', owner=None, repo=None):
     structure = []
@@ -57,38 +67,19 @@ def format_directory_structure(contents, prefix='', owner=None, repo=None):
             structure.append(f"{prefix}📄 {item['name']}")
     return structure
 
-def clone_repository(owner: str, repo: str) -> Optional[str]:
-    """Clone the repository to a temporary directory."""
-    import tempfile
-    import subprocess
-    
-    # Create a temporary directory
-    temp_dir = tempfile.mkdtemp()
-    repo_url = f"https://github.com/{owner}/{repo}.git"
-    
-    try:
-        # Clone the repository
-        subprocess.run(
-            ["git", "clone", repo_url, temp_dir],
-            check=True,
-            capture_output=True
-        )
-        return temp_dir
-    except subprocess.CalledProcessError as e:
-        print(f"Error cloning repository: {e.stderr.decode()}")
-        return None
+def get_repo_languages(owner, repo):
+    url = f'https://api.github.com/repos/{owner}/{repo}/languages'
+    response = requests.get(url, headers=get_github_headers())
+    response.raise_for_status()
+    return response.json()
 
 class GeminiClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-    
+
     def generate_text_from_gemini(self, prompt: str) -> str:
-        """Generate text using Gemini API."""
-        headers = {
-            'Content-Type': 'application/json',
-        }
-        
+        headers = {'Content-Type': 'application/json'}
         payload = {
             "contents": [{
                 "parts": [{
@@ -96,7 +87,6 @@ class GeminiClient:
                 }]
             }]
         }
-        
         try:
             response = requests.post(
                 f"{self.api_url}?key={self.api_key}",
@@ -104,7 +94,6 @@ class GeminiClient:
                 json=payload
             )
             response.raise_for_status()
-            
             return response.json().get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
         except Exception as e:
             print(f"Error calling Gemini API: {str(e)}")
@@ -116,7 +105,6 @@ def repo_analyzer():
 
 @repo_analysis.route('/repo_analyzer/api/analyze-repo', methods=['POST'])
 def analyze_repo():
-    """Main endpoint for repository analysis."""
     data = request.json
     owner = data.get('owner')
     repo = data.get('repo')
@@ -125,48 +113,45 @@ def analyze_repo():
         return jsonify({"error": "Missing owner or repository name"}), 400
 
     try:
-        # Clone the repository
-        repo_path = clone_repository(owner, repo)
-        if not repo_path:
-            return jsonify({"error": "Failed to clone repository"}), 500
+        gemini_client = GeminiClient(API_KEY)
 
-        try:
-            # Initialize Gemini client
-            gemini_client = GeminiClient(API_KEY)
-            
-            # Get initial codebase overview
-            overview_json = get_initial_codebase_overview(repo_path, gemini_client)
-            
-            # Generate role-specific summaries
-            role_summaries = generate_multi_role_summary_report(repo_path, overview_json, gemini_client)
-            
-            # Get repository contents and structure
-            contents = get_repo_contents(owner, repo)
-            structure = format_directory_structure(contents, owner=owner, repo=repo)
-            
-            # Get language statistics
-            languages = get_repo_languages(owner, repo)
-            if not languages:
-                return jsonify({"error": "No language data available for this repository"}), 404
-                
-            total_bytes = sum(languages.values())
-            languages = {lang: (bytes/total_bytes)*100 for lang, bytes in languages.items()}
+        code_files = get_all_code_files(owner, repo)
+        if not code_files:
+            return jsonify({"error": "No valid code files found in repository"}), 400
 
-            # Prepare final response
-            response = {
-                "structure": "\n".join(structure),
-                "languages": languages,
-                "overview": overview_json,
-                "role_summaries": role_summaries["role_summaries"]
-            }
-            
-            return jsonify(response)
-            
-        finally:
-            # Clean up: remove the cloned repository
-            import shutil
-            shutil.rmtree(repo_path, ignore_errors=True)
-            
+        # Step 1: Get project overview (safe fallback if string)
+        overview_raw = get_initial_codebase_overview_from_api(code_files, gemini_client)
+
+        # Step 2: Safely parse or wrap it
+        if isinstance(overview_raw, dict):
+            project_overview = overview_raw
+        else:
+            try:
+                import json
+                project_overview = json.loads(overview_raw)
+            except:
+                project_overview = {"description": str(overview_raw).strip()}
+
+        # Step 3: Generate role summaries
+        role_summaries = generate_multi_role_summary_report_from_api(code_files, project_overview, gemini_client)
+
+        contents = get_repo_contents(owner, repo)
+        structure = format_directory_structure(contents, owner=owner, repo=repo)
+
+        languages = get_repo_languages(owner, repo)
+        if not languages:
+            return jsonify({"error": "No language data available for this repository"}), 404
+
+        total_bytes = sum(languages.values())
+        languages = {lang: (bytes / total_bytes) * 100 for lang, bytes in languages.items()}
+
+        return jsonify({
+            "structure": "\n".join(structure),
+            "languages": languages,
+            "project_overview": project_overview,
+            "role_summaries": role_summaries["role_summaries"]
+        })
+
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:
             return jsonify({"error": f"Repository not found: {owner}/{repo}"}), 404
@@ -175,7 +160,7 @@ def analyze_repo():
         else:
             return jsonify({"error": f"GitHub API error: {str(e)}"}), e.response.status_code
     except Exception as e:
-        return jsonify({"error": f"Error analyzing repository: {str(e)}"}), 500 
+        return jsonify({"error": f"Error analyzing repository: {str(e)}"}), 500
 
 @repo_analysis.route('/api/feedback', methods=['POST'])
 def submit_feedback():
@@ -199,4 +184,4 @@ def submit_feedback():
         feedback_text=feedback_text,
         additional_data=additional_data
     )
-    return jsonify({"message": "Feedback saved successfully"}) 
+    return jsonify({"message": "Feedback saved successfully"})
