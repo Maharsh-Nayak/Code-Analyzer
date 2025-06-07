@@ -5,7 +5,7 @@ import requests
 from pathlib import Path
 import logging
 
-def get_initial_codebase_overview(repo_path: str, gemini_client) -> Dict:
+def get_initial_codebase_overview_from_api(repo_path: str, gemini_client) -> Dict:
     """Get initial overview of the codebase using Gemini."""
     # Get directory structure
     structure = []
