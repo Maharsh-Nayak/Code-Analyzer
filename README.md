@@ -59,4 +59,4 @@ The application is built with:
 - Internet connection for API access
 - Valid Gemini API key
 
-Deployment link : https://code-analyzer-h3ov.onrender.com
+Deployment link : https://code-analyzer-1.onrender.com/
